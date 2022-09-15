@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+set(CMAKE_LEGACY_CYGWIN_WIN32 0)
+
+option(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(EXM_USE_CLANG        "использовать clang" OFF)
+option(EXM_TEST_ENABLED     "выполнять сборку тестов" ON)
+
+if (EXM_USE_CLANG)
+    set(CMAKE_CXX_COMPILER clang++)
+    set(CMAKE_C_COMPILER clang)
+endif (EXM_USE_CLANG)
+
+project(example_project)
+
+enable_testing()
+
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+if (Boost_FOUND)
+    add_definitions(-DEXM_BOOST_ENABLED)
+    include_directories(${Boost_INCLUDE_DIRS})
+endif (Boost_FOUND)
+
+if (EXM_USE_CLANG)
+    set(CMAKE_CXX_FLAGS "-Wall -Wformat -Wformat-security -Werror")
+else (EXM_USE_CLANG)
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wformat -Wformat-security -Werror")
+endif (EXM_USE_CLANG)
+if (Boost_FOUND AND EXM_TEST_ENABLED)
+    add_compile_options("-fsanitize=address,undefined")
+    link_libraries("-fsanitize=address,undefined")
+    #add_compile_options("-fsanitize=thread")
+    #link_libraries("-fsanitize=thread")
+endif (Boost_FOUND AND EXM_TEST_ENABLED)
+add_subdirectory(lib)
+option(EXM_TEST_ENABLED "выполнять сборку тестов" ON)
+if (Boost_FOUND AND EXM_TEST_ENABLED)
+    add_subdirectory(tests)
+endif (Boost_FOUND AND EXM_TEST_ENABLED)
